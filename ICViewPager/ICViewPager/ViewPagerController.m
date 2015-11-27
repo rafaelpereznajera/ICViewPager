@@ -376,7 +376,8 @@
                                           direction:UIPageViewControllerNavigationDirectionForward
                                            animated:NO
                                          completion:^(BOOL completed) {
-                                             weakSelf.animatingToTab = NO;
+                                             __strong __typeof(weakSelf)strongSelf = weakSelf;
+                                             strongSelf.animatingToTab = NO;
                                          }];
         
     } else if (!(activeContentIndex + 1 == self.activeContentIndex || activeContentIndex - 1 == self.activeContentIndex)) {
@@ -385,13 +386,14 @@
                                           direction:(activeContentIndex < self.activeContentIndex) ? UIPageViewControllerNavigationDirectionReverse : UIPageViewControllerNavigationDirectionForward
                                            animated:YES
                                          completion:^(BOOL completed) {
-                                             
-                                             weakSelf.animatingToTab = NO;
+                                             __strong __typeof(weakSelf)strongSelf = weakSelf;
+                                             __strong __typeof(weakPageViewController)strongPageViewController = weakPageViewController;
+                                             strongSelf.animatingToTab = NO;
                                              
                                              // Set the current page again to obtain synchronisation between tabs and content
                                              dispatch_async(dispatch_get_main_queue(), ^{
-                                                 [weakPageViewController setViewControllers:@[viewController]
-                                                                                  direction:(activeContentIndex < weakSelf.activeContentIndex) ? UIPageViewControllerNavigationDirectionReverse : UIPageViewControllerNavigationDirectionForward
+                                                 [strongPageViewController setViewControllers:@[viewController]
+                                                                                  direction:(activeContentIndex < strongSelf.activeContentIndex) ? UIPageViewControllerNavigationDirectionReverse : UIPageViewControllerNavigationDirectionForward
                                                                                    animated:NO
                                                                                  completion:nil];
                                              });
@@ -403,7 +405,8 @@
                                           direction:(activeContentIndex < self.activeContentIndex) ? UIPageViewControllerNavigationDirectionReverse : UIPageViewControllerNavigationDirectionForward
                                            animated:YES
                                          completion:^(BOOL completed) {
-                                             weakSelf.animatingToTab = NO;
+                                             __strong __typeof(weakSelf)strongSelf = weakSelf;
+                                             strongSelf.animatingToTab = NO;
                                          }];
     }
     
@@ -589,22 +592,27 @@
     // Keep a reference to previousIndex in case it is needed for the delegate
     NSUInteger previousIndex = self.activeTabIndex;
     
-    // Set activeTabIndex
-    self.activeTabIndex = index;
-    
-    // Set activeContentIndex
-    self.activeContentIndex = index;
-    
-    // Inform delegate about the change
-    if ([self.delegate respondsToSelector:@selector(viewPager:didChangeTabToIndex:)]) {
-        [self.delegate viewPager:self didChangeTabToIndex:self.activeTabIndex];
-    }
-    else if([self.delegate respondsToSelector:@selector(viewPager:didChangeTabToIndex:fromIndex:)]){
-        [self.delegate viewPager:self didChangeTabToIndex:self.activeTabIndex fromIndex:previousIndex];
-    }
-    else if ([self.delegate respondsToSelector:@selector(viewPager:didChangeTabToIndex:fromIndex:didSwipe:)]) {
-        [self.delegate viewPager:self didChangeTabToIndex:self.activeTabIndex fromIndex:previousIndex didSwipe:didSwipe];
-    }
+    __weak __typeof(self)weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        __strong __typeof(weakSelf)strongSelf = weakSelf;
+        
+        // Set activeTabIndex
+        strongSelf.activeTabIndex = index;
+        
+        // Set activeContentIndex
+        strongSelf.activeContentIndex = index;
+        
+        // Inform delegate about the change
+        if ([strongSelf.delegate respondsToSelector:@selector(viewPager:didChangeTabToIndex:)]) {
+            [strongSelf.delegate viewPager:strongSelf didChangeTabToIndex:strongSelf.activeTabIndex];
+        }
+        else if([strongSelf.delegate respondsToSelector:@selector(viewPager:didChangeTabToIndex:fromIndex:)]){
+            [strongSelf.delegate viewPager:strongSelf didChangeTabToIndex:strongSelf.activeTabIndex fromIndex:previousIndex];
+        }
+        else if ([strongSelf.delegate respondsToSelector:@selector(viewPager:didChangeTabToIndex:fromIndex:didSwipe:)]) {
+            [strongSelf.delegate viewPager:strongSelf didChangeTabToIndex:strongSelf.activeTabIndex fromIndex:previousIndex didSwipe:didSwipe];
+        }
+    });
 }
 
 - (void)setNeedsReloadOptions {
